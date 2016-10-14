@@ -3,7 +3,7 @@ var game = init();
 function init() {
     var p = {
         logoHeight : 0.2,
-        boxHeight  : 0.4,
+        boxHeight  : 0.5,
         aimBoxSpeed: 5,
         isCollision: true,
         colors     : [
@@ -49,7 +49,7 @@ function init() {
         return material;
     }
 
-    //目标块
+    //region 目标块
     function createAimBox() {
         this.dir = 'right';
         this.speed = 5;
@@ -67,38 +67,52 @@ function init() {
     }
 
     createAimBox.prototype.resetPos = function (dir) {
+        this.entity.enabled = true;
         this.dir = dir;
         var _offset = 3;
         if (this.dir == 'right') {
             this.entity.setPosition(_offset, boxs.length * p.boxHeight + 3, 0);
         } else {
-            this.entity.setPosition(0, boxs.length * p.boxHeight + 3, _offset);
+            this.entity.setPosition(0, boxs.length * p.boxHeight + 3, _offset * -1);
         }
     };
     createAimBox.prototype.update = function (dt) {
 
-        this.entity.enabled = p.isCollision;
+        if (this.dir == 'right') {
+            var aimOldPosX = this.entity.getPosition().x;
+            if (aimOldPosX > 3) {
+                this.speed = this.speed * -1;
+            }
+            if (aimOldPosX < -3) {
+                this.speed = this.speed * -1;
+            }
+            var aimPosX = aimOldPosX + this.speed * dt;
+            this.entity.setPosition(aimPosX, boxs.length * p.boxHeight + 3, 0)
+        } else {
+            var aimOldPosZ = this.entity.getPosition().z;
+            if (aimOldPosZ > 3) {
+                this.speed = this.speed * -1;
+            }
+            if (aimOldPosZ < -3) {
+                this.speed = this.speed * -1;
+            }
+            var aimPosZ = aimOldPosZ + this.speed * dt;
+            this.entity.setPosition(0, boxs.length * p.boxHeight + 3, aimPosZ)
+        }
 
-        var aimOldPosX = this.entity.getPosition().x;
-        if (aimOldPosX > 3) {
-            this.speed = this.speed * -1;
-        }
-        if (aimOldPosX < -3) {
-            this.speed = this.speed * -1;
-        }
-        var aimPosX = aimOldPosX + this.speed * dt;
-        this.entity.setPosition(aimPosX, boxs.length * p.boxHeight + 3, 0)
     };
 
     model.aimBox = new createAimBox();
     model.aimBox.resetPos('right');
+
+    //endregion
 
     //region 积木块
     function Box(arg) {
         var entity = new pc.Entity();
         var _size = {
             x: ( 3 + p.logoHeight * 2),
-            y: p.logoHeight * 2,
+            y: p.boxHeight,
             z: (2 + p.logoHeight)
         };
         entity.addComponent('model', {
@@ -118,13 +132,14 @@ function init() {
             type       : "box",
             halfExtents: [_size.x / 2, _size.y / 2, _size.z / 2]
         });
-        entity.rigidbody.teleport(arg.pos.x, arg.pos.y, 0, 0, 0);
+        entity.rigidbody.teleport(arg.pos.x, arg.pos.y, arg.pos.z, 0, 0);
         entity.rigidbody.linearVelocity = pc.Vec3.ZERO;
         entity.rigidbody.angularVelocity = pc.Vec3.ZERO;
 
         entity.collision.on('collisionstart', function (result) {
             if (p.isCollision == false) {
                 p.isCollision = true;
+                boxCollisionCallback();
             }
         });
 
@@ -132,22 +147,33 @@ function init() {
         return entity;
     }
 
+    function boxCollisionCallback() {
+        if (model.aimBox.dir == 'right') {
+            model.aimBox.resetPos('left');
+        } else {
+            model.aimBox.resetPos('right');
+        }
+    }
 
-    window.addEventListener('click', function () {
+
+    window.addEventListener('touchstart', function () {
         if (p.isCollision) {
             p.isCollision = false;
-            boxs.push({
-                index : boxs.length,
-                entity: new Box({
-                    pos  : {
-                        x: model.aimBox.entity.getPosition().x,
-                        y: model.aimBox.entity.getPosition().y
-                    },
-                    color: p.colors[boxs.length]
-                })
-            });
+            if (model.aimBox.entity.enabled == true) {
+                model.aimBox.entity.enabled = false;
+                boxs.push({
+                    index : boxs.length,
+                    entity: new Box({
+                        pos  : {
+                            x: model.aimBox.entity.getPosition().x,
+                            y: model.aimBox.entity.getPosition().y,
+                            z: model.aimBox.entity.getPosition().z
+                        },
+                        color: p.colors[boxs.length]
+                    })
+                });
+            }
         }
-
 
     });
 
@@ -304,7 +330,7 @@ function init() {
         }
         p.isGameOver = true;
 
-        model.aimBox.enabled = false;
+        model.aimBox.entity.enabled = false;
 
         getScoreFn();
     }
