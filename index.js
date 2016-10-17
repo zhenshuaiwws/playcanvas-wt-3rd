@@ -1,7 +1,7 @@
 function Game() {
     var p = {
         logoHeight : 0.2,
-        boxHeight  : 0.5,
+        boxHeight  : 0.3,
         isCollision: true,
         colors     : [
             [0.90, 0.26, 0.37],
@@ -113,7 +113,7 @@ function Game() {
     //region 目标块
     function AimBox() {
         this.dir = 'right';
-        this.speed = 5;
+        this.speed = 4;
 
         this.entity = new pc.Entity();
         this.entity.addComponent('model', {
@@ -125,6 +125,7 @@ function Game() {
         this.entity.model.model.meshInstances[0].material = createMaterial(_color[0], _color[1], _color[2]);
         app.root.addChild(this.entity);
     }
+
     AimBox.prototype.reset = function () {
         var _color = getColor();
         this.entity.model.model.meshInstances[0].material = createMaterial(_color[0], _color[1], _color[2]);
@@ -193,7 +194,7 @@ function Game() {
         entity.addComponent('rigidbody', {
             type       : "dynamic",
             restitution: 0,
-            mass       : 10
+            mass       : 1000
         });
         entity.addComponent('collision', {
             type       : "box",
@@ -257,8 +258,7 @@ function Game() {
             type: "box"
         });
         ground.addComponent('rigidbody', {
-            type       : "static",
-            restitution: 0
+            type: "static"
         });
         ground.addComponent('collision', {
             type       : "box",
@@ -272,12 +272,12 @@ function Game() {
     }
 
     var ground = new Ground({
-        scale_x: 5,
+        scale_x: 6,
         scale_y: 5,
-        scale_z: 4 - p.logoHeight,
-        pos_x  : 0,
+        scale_z: 4.5,
+        pos_x  : 0.6,
         pos_y  : 0 - 5 / 2 - p.logoHeight - p.logoHeight,
-        pos_z  : 0
+        pos_z  : -0.5
     });
 
     // 1 222
@@ -335,15 +335,15 @@ function Game() {
         this.entity.addComponent('camera', {
             clearColor: new pc.Color(46 / 255, 42 / 255, 56 / 255)
         });
-        this.entity.setPosition(-6, 4, 6);
-        this.entity.lookAt(0, 1, 0);
+        this.entity.setPosition(-8.5, 4, 7);
+        this.entity.lookAt(0, 2.5, 0);
         app.root.addChild(this.entity);
 
     }
 
     Camera.prototype.reset = function (dt) {
-        this.entity.setPosition(-6, 4, 6);
-        this.entity.lookAt(0, 1, 0);
+        this.entity.setPosition(-8.5, 4, 7);
+        this.entity.lookAt(0, 2.5, 0);
     };
 
     Camera.prototype.update = function (dt) {
@@ -378,13 +378,13 @@ function Game() {
         var light = new pc.Entity();
         light.addComponent('light');
         light.setEulerAngles(0, 0, 0);
+        light.setEulerAngles(45, 0, 30);
         app.root.addChild(light);
 
     }
 
     var light = new Light();
     var light = new Light();
-    var light = new Light2();
     var light = new Light2();
     var light = new Light2();
     //endregion
@@ -465,4 +465,7 @@ $(function () {
     $('.restart-btn').click(function () {
         game.restart();
     })
+
+    window.addEventListener("devicemotion", function (event) {
+    }, false);
 });
