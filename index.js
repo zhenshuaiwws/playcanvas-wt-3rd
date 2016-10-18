@@ -5,74 +5,75 @@ function Game(callback) {
         isCollision     : true,
         colors          : [
             [0.90, 0.26, 0.37],
-            [0.92, 0.29, 0.36],
+            // [0.92, 0.29, 0.36],
             [0.93, 0.32, 0.38],
-            [0.95, 0.36, 0.40],
+            // [0.95, 0.36, 0.40],
             [0.96, 0.42, 0.44],
 
             [0.97, 0.51, 0.51],
-            [0.97, 0.56, 0.55],
+            // [0.97, 0.56, 0.55],
             [0.98, 0.60, 0.58],
-            [0.98, 0.64, 0.61],
+            // [0.98, 0.64, 0.61],
             [0.98, 0.67, 0.64],
 
             [0.98, 0.70, 0.66],
-            [0.99, 0.73, 0.69],
+            // [0.99, 0.73, 0.69],
             [0.99, 0.76, 0.71],
-            [0.99, 0.78, 0.73],
+            // [0.99, 0.78, 0.73],
             [1.00, 0.88, 0.75],
 
             [1.00, 0.84, 0.75],
-            [1.00, 0.81, 0.74],
+            // [1.00, 0.81, 0.74],
             [0.99, 0.79, 0.73],
-            [0.99, 0.76, 0.71],
+            // [0.99, 0.76, 0.71],
             [0.99, 0.74, 0.69],
 
             [0.98, 0.69, 0.66],
-            [0.98, 0.67, 0.64],
+            // [0.98, 0.67, 0.64],
             [0.98, 0.63, 0.61],
-            [0.98, 0.60, 0.58],
+            // [0.98, 0.60, 0.58],
             [0.97, 0.56, 0.55],
 
             [0.96, 0.50, 0.49],
-            [0.96, 0.44, 0.45],
+            // [0.96, 0.44, 0.45],
             [0.95, 0.38, 0.41],
-            [0.94, 0.33, 0.38],
+            // [0.94, 0.33, 0.38],
             [0.92, 0.28, 0.36],
 
             [0.90, 0.26, 0.37],
-            [0.89, 0.25, 0.38],
+            // [0.89, 0.25, 0.38],
             [0.87, 0.24, 0.41],
-            [0.85, 0.24, 0.43],
+            // [0.85, 0.24, 0.43],
             [0.83, 0.24, 0.46],
 
             [0.80, 0.25, 0.50],
-            [0.78, 0.25, 0.54],
+            // [0.78, 0.25, 0.54],
             [0.76, 0.25, 0.57],
-            [0.74, 0.25, 0.62],
+            // [0.74, 0.25, 0.62],
             [0.72, 0.25, 0.65],
 
             [0.69, 0.25, 0.69],
-            [0.66, 0.25, 0.72],
+            // [0.66, 0.25, 0.72],
             [0.64, 0.25, 0.75],
-            [0.61, 0.26, 0.76],
+            // [0.61, 0.26, 0.76],
             [0.56, 0.27, 0.79],
 
             [0.51, 0.27, 0.81],
-            [0.47, 0.28, 0.83],
+            // [0.47, 0.28, 0.83],
             [0.44, 0.29, 0.84],
-            [0.41, 0.29, 0.84],
+            // [0.41, 0.29, 0.84],
             [0.38, 0.31, 0.85],
 
             [0.35, 0.33, 0.85],
-            [0.32, 0.35, 0.85],
+            // [0.32, 0.35, 0.85],
             [0.30, 0.37, 0.85],
-            [0.27, 0.40, 0.84],
+            // [0.27, 0.40, 0.84],
             [0.25, 0.42, 0.84]
 
         ],
         isGameOver      : false,
-        gameOverCallback: callback
+        gameOverCallback: callback,
+        interval        : null
     };
     this.p = p;
 
@@ -219,11 +220,7 @@ function Game(callback) {
 
     function boxCollisionCallback() {
 
-        if (model.AimBox.dir == 'right') {
-            model.AimBox.resetPos('left');
-        } else {
-            model.AimBox.resetPos('right');
-        }
+        model.AimBox.resetPos('right');
     }
 
     window.addEventListener('touchstart', function () {
@@ -343,8 +340,8 @@ function Game(callback) {
         this.entity.addComponent('camera', {
             clearColor: new pc.Color(46 / 255, 42 / 255, 56 / 255)
         });
-        this.entity.setPosition(-8.5, 4, 7);
-        this.entity.lookAt(0, 2.5, 0);
+        this.entity.setPosition(-8.5, 3.5, 7);
+        this.entity.lookAt(0, 2, 0);
         app.root.addChild(this.entity);
 
     }
@@ -355,7 +352,7 @@ function Game(callback) {
     };
     Camera.prototype.update = function (dt) {
         var camera = this.entity;
-        if (camera.getPosition().y < (4 + (p.boxHeight * model.boxs.length))) {
+        if (camera.getPosition().y < (3.5 + (p.boxHeight * model.boxs.length))) {
             camera.setPosition(camera.getPosition().x, camera.getPosition().y + 0.5 * dt, camera.getPosition().z);
         }
     };
@@ -400,14 +397,17 @@ function Game(callback) {
     });
 
 }
-Game.prototype.checkGameOver = function (callback) {
+Game.prototype.checkGameOver = function () {
     var model = this.model;
     var p = this.p;
-    var interval = setInterval(function () {
+
+    clearInterval(p.interval);
+    p.interval = null;
+    p.interval = setInterval(function () {
         for (var i = 0; i < model.boxs.length; i++) {
             var y = model.boxs[i].entity.getPosition().y;
             if (y < (model.boxs[i].index * p.boxHeight - 1)) {
-                clearInterval(interval);
+                clearInterval(p.interval);
 
                 GameOverFn();
                 function GameOverFn() {
@@ -443,6 +443,7 @@ Game.prototype.restart = function () {
     this.p.isGameOver = false;
     this.p.isCollision = true;
 
+    this.checkGameOver();
 };
 
 $(function () {
