@@ -1,9 +1,9 @@
 function Game(callback) {
     var p = {
-        logoHeight : 0.2,
-        boxHeight  : 0.3,
-        isCollision: true,
-        colors     : [
+        logoHeight      : 0.2,
+        boxHeight       : 0.3,
+        isCollision     : true,
+        colors          : [
             [0.90, 0.26, 0.37],
             [0.92, 0.29, 0.36],
             [0.93, 0.32, 0.38],
@@ -71,7 +71,8 @@ function Game(callback) {
             [0.25, 0.42, 0.84]
 
         ],
-        isGameOver : false
+        isGameOver      : false,
+        gameOverCallback: callback
     };
     this.p = p;
 
@@ -93,13 +94,12 @@ function Game(callback) {
     });
     //endregion
 
+    //region common
     //材质颜色
     function createMaterial(r, g, b) {
         var material = new pc.StandardMaterial();
-        material.ambient.set(r, g, b);
         material.diffuse.set(r, g, b);
-        material.specular.set(0.5, 0.5, 0.5);
-        material.shininess = 50;
+        material.shininess = 0;
 
 
         material.update();
@@ -110,10 +110,13 @@ function Game(callback) {
         return p.colors[model.boxs.length % p.colors.length];
     }
 
+    //endregion
+
     //region 目标块
     function AimBox() {
         this.dir = 'right';
         this.speed = 4;
+        this.offset = 3;
 
         this.entity = new pc.Entity();
         this.entity.addComponent('model', {
@@ -138,29 +141,28 @@ function Game(callback) {
     AimBox.prototype.resetPos = function (dir) {
         this.entity.enabled = true;
         this.dir = dir;
-        var _offset = 3;
         if (this.dir == 'right') {
-            this.entity.setPosition(_offset, model.boxs.length * p.boxHeight + 3, 0);
+            this.entity.setPosition(this.offset, model.boxs.length * p.boxHeight + 3, 0);
         } else {
-            this.entity.setPosition(0, model.boxs.length * p.boxHeight + 3, _offset * -1);
+            this.entity.setPosition(0, model.boxs.length * p.boxHeight + 3, this.offset * -1);
         }
     };
     AimBox.prototype.update = function (dt) {
 
         if (this.dir == 'right') {
             var aimOldPosX = this.entity.getPosition().x;
-            if (aimOldPosX > 3) {
+            if (aimOldPosX > this.offset) {
                 this.speed = Math.abs(this.speed) * -1;
-            } else if (aimOldPosX < -3) {
+            } else if (aimOldPosX < this.offset * -1) {
                 this.speed = Math.abs(this.speed);
             }
             var aimPosX = aimOldPosX + this.speed * dt;
             this.entity.setPosition(aimPosX, model.boxs.length * p.boxHeight + 3, 0)
         } else {
             var aimOldPosZ = this.entity.getPosition().z;
-            if (aimOldPosZ > 3) {
+            if (aimOldPosZ > this.offset) {
                 this.speed = Math.abs(this.speed) * -1;
-            } else if (aimOldPosZ < -3) {
+            } else if (aimOldPosZ < this.offset * -1) {
                 this.speed = Math.abs(this.speed);
             }
             var aimPosZ = aimOldPosZ + this.speed * dt;
@@ -175,7 +177,7 @@ function Game(callback) {
 
     //endregion
 
-    //region 积木块
+    //region 下落块
     function Box(arg) {
         var entity = new pc.Entity();
         var _size = {
@@ -224,7 +226,6 @@ function Game(callback) {
         }
     }
 
-
     window.addEventListener('touchstart', function () {
         if (p.isCollision) {
             p.isCollision = false;
@@ -244,7 +245,6 @@ function Game(callback) {
                 model.AimBox.resetMaterial();
             }
         }
-
     });
 
     //endregion
@@ -271,7 +271,7 @@ function Game(callback) {
         this.entity = ground;
     }
 
-    var ground = new Ground({
+    new Ground({
         scale_x: 6,
         scale_y: 5,
         scale_z: 4.5,
@@ -280,9 +280,13 @@ function Game(callback) {
         pos_z  : -0.5
     });
 
-    // 1 222
-    // 3 4 5
-    var logo1 = new Ground({
+    // LOGO
+    // **************
+    // ** 11 22222 **
+    // ** 33 44 55 **
+    // **************
+    //1
+    new Ground({
         scale_x : 1,
         scale_y : p.logoHeight,
         scale_z : 1,
@@ -291,7 +295,8 @@ function Game(callback) {
         pos_z   : (1 + p.logoHeight) / 2 * -1,
         material: createMaterial(231 / 255, 78 / 255, 80 / 255)
     });
-    var logo2 = new Ground({
+    //2
+    new Ground({
         scale_x : 1 + 1 + p.logoHeight,
         scale_y : p.logoHeight,
         scale_z : 1,
@@ -300,7 +305,8 @@ function Game(callback) {
         pos_z   : (1 + p.logoHeight) / 2 * -1,
         material: createMaterial(231 / 255, 78 / 255, 80 / 255)
     });
-    var logo3 = new Ground({
+    //3
+    new Ground({
         scale_x : 1,
         scale_y : p.logoHeight,
         scale_z : 1,
@@ -309,7 +315,8 @@ function Game(callback) {
         pos_z   : (1 + p.logoHeight) / 2,
         material: createMaterial(231 / 255, 78 / 255, 80 / 255)
     });
-    var logo4 = new Ground({
+    //4
+    new Ground({
         scale_x : 1,
         scale_y : p.logoHeight,
         scale_z : 1,
@@ -318,7 +325,8 @@ function Game(callback) {
         pos_z   : (1 + p.logoHeight) / 2,
         material: createMaterial(231 / 255, 78 / 255, 80 / 255)
     });
-    var logo5 = new Ground({
+    //5
+    new Ground({
         scale_x : 1,
         scale_y : p.logoHeight,
         scale_z : 1 + p.logoHeight,
@@ -345,19 +353,20 @@ function Game(callback) {
         this.entity.setPosition(-8.5, 4, 7);
         this.entity.lookAt(0, 2.5, 0);
     };
-
     Camera.prototype.update = function (dt) {
         var camera = this.entity;
         if (camera.getPosition().y < (4 + (p.boxHeight * model.boxs.length))) {
             camera.setPosition(camera.getPosition().x, camera.getPosition().y + 0.5 * dt, camera.getPosition().z);
         }
     };
-    Camera.prototype.gameOverZoom = function (dt, callback) {
+    Camera.prototype.gameOverZoom = function (dt) {
         var camera = this.entity;
-        if (camera.getPosition().z < 10) {
+        if (camera.getPosition().z < 8) {
             camera.setPosition(camera.getPosition().x - 3 * dt, camera.getPosition().y + 3 * dt, camera.getPosition().z + 3 * dt);
         } else {
-            callback && callback();
+            if (camera.getPosition().y > 5) {
+                camera.setPosition(camera.getPosition().x, camera.getPosition().y - 0.1 * dt, camera.getPosition().z);
+            }
         }
     };
     model.camera = new Camera();
@@ -367,30 +376,18 @@ function Game(callback) {
     function Light() {
         var light = new pc.Entity();
         light.addComponent('light', {
-            color: new pc.Color(1, 1, 1)
+            intensity: 2
         });
         light.setEulerAngles(45, 0, 30);
         app.root.addChild(light);
 
     }
 
-    function Light2() {
-        var light = new pc.Entity();
-        light.addComponent('light');
-        light.setEulerAngles(0, 0, 0);
-        light.setEulerAngles(45, 0, 30);
-        app.root.addChild(light);
-
-    }
-
-    var light = new Light();
-    var light = new Light();
-    var light = new Light2();
-    var light = new Light2();
+    new Light();
     //endregion
 
     //验证游戏失败
-    this.checkGameOver(callback);
+    this.checkGameOver();
 
     //刷新
     app.on('update', function (dt) {
@@ -421,7 +418,7 @@ Game.prototype.checkGameOver = function (callback) {
                     p.isGameOver = true;
                     model.AimBox.entity.enabled = false;
 
-                    callback && callback(model.boxs.length);
+                    p.gameOverCallback(model.boxs.length);
                 }
 
             }
@@ -436,22 +433,15 @@ Game.prototype.restart = function () {
     }
     boxs.length = 0;
 
-    //
-    var AimBox = this.model.AimBox;
-    AimBox.reset();
+    //目标块
+    this.model.AimBox.reset();
 
     //镜头
-    var camera = this.model.camera;
-    camera.reset();
+    this.model.camera.reset();
 
-    //重置状态
+    //状态重置
     this.p.isGameOver = false;
     this.p.isCollision = true;
-
-    //清除计分牌
-    $('.score-area').hide();
-
-    this.checkGameOver();
 
 };
 
@@ -460,14 +450,17 @@ $(function () {
     var game = new Game(gameOverCallback);
 
     //游戏结束callback
-    function gameOverCallback() {
+    function gameOverCallback(score) {
         //得分画面
         $('.score-area').show();
-        $('.score-number').html(model.boxs.length);
+        $('.score-number').html(score);
     }
 
     //重新打开
     $('.restart-btn').click(function () {
+        //清除计分牌
+        $('.score-area').hide();
+
         game.restart();
     })
 });
