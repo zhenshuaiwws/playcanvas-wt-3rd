@@ -5,7 +5,49 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="shared/css/index.css">
+    <style>
+        html, body {
+            padding : 0;
+        }
+
+        canvas {
+            position : absolute;
+            top      : 0px;
+            left     : 0px;
+            z-index  : 1;
+            width    : 100%;
+            height   : 100%;
+        }
+
+        .page-go-area {
+            position    : absolute;
+            top         : 0;
+            left        : 0;
+            z-index     : 3;
+            padding-top : 20px;
+            width       : 100%;
+            height      : 100%;
+            text-align  : center;
+        }
+
+        .page-go-area img {
+            max-width : 85%;
+        }
+
+        .score-area {
+            display    : none;
+            position   : absolute;
+            top        : 50%;
+            left       : 0;
+            z-index    : 2;
+            margin-top : -50px;
+            width      : 100%;
+            height     : 100px;
+            text-align : center;
+            color      : #ffffff;
+            font-size  : 30px;
+        }
+    </style>
     <script src="shared/js/playcanvas-stable.js"></script>
     <script src="shared/js/ammo.751ec5f.js"></script>
     <script src="shared/js/zepto.min.js"></script>
@@ -13,6 +55,16 @@
 <body>
 <canvas id="application-canvas"></canvas>
 <script src="index.js"></script>
+<!--<div class="page-go-area">-->
+    <!--<div class="">-->
+        <!--<img src="shared/image/logo.png" alt="">-->
+        <!--<div class="line"></div>-->
+        <!--<div>一起来建造Worktile大楼吧！<a href="javascript:;">查看活动细则</a></div>-->
+        <!--<div>-->
+            <!--<img src="shared/image/title.png" alt="">-->
+        <!--</div>-->
+    <!--</div>-->
+<!--</div>-->
 <div class="score-area">
     得分: <span class="score-number"></span><br>
     <a href="javascript:;" class="restart-btn">重新开始</a>

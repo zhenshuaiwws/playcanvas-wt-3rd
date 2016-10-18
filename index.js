@@ -1,4 +1,4 @@
-function Game() {
+function Game(callback) {
     var p = {
         logoHeight : 0.2,
         boxHeight  : 0.3,
@@ -390,7 +390,7 @@ function Game() {
     //endregion
 
     //验证游戏失败
-    this.checkGameOver();
+    this.checkGameOver(callback);
 
     //刷新
     app.on('update', function (dt) {
@@ -403,7 +403,7 @@ function Game() {
     });
 
 }
-Game.prototype.checkGameOver = function () {
+Game.prototype.checkGameOver = function (callback) {
     var model = this.model;
     var p = this.p;
     var interval = setInterval(function () {
@@ -421,11 +421,7 @@ Game.prototype.checkGameOver = function () {
                     p.isGameOver = true;
                     model.AimBox.entity.enabled = false;
 
-                    //得分画面
-                    $('.score-area').show();
-                    $('.score-number').html(model.boxs.length)
-
-                    console.log('gameover')
+                    callback && callback(model.boxs.length);
                 }
 
             }
@@ -460,12 +456,18 @@ Game.prototype.restart = function () {
 };
 
 $(function () {
-    var game = new Game();
+    //初始化游戏
+    var game = new Game(gameOverCallback);
 
+    //游戏结束callback
+    function gameOverCallback() {
+        //得分画面
+        $('.score-area').show();
+        $('.score-number').html(model.boxs.length);
+    }
+
+    //重新打开
     $('.restart-btn').click(function () {
         game.restart();
     })
-
-    window.addEventListener("devicemotion", function (event) {
-    }, false);
 });
