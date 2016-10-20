@@ -1,4 +1,4 @@
-function Game(callback) {
+function Game(callback, audioPerfectCallback, audioCollisionCallback) {
     var p = {
         logoHeight      : 0.2,
         boxHeight       : 0.3,
@@ -73,7 +73,8 @@ function Game(callback) {
         ],
         isGameOver      : false,
         gameOverCallback: callback,
-        interval        : null
+        interval        : null,
+        perfectNumber   : 0
     };
     this.p = p;
 
@@ -126,11 +127,12 @@ function Game(callback) {
         this.entity.setLocalScale(3 + p.logoHeight + p.logoHeight, p.boxHeight, 2 + p.logoHeight);
         this.entity.setPosition(0, model.boxs.length * p.boxHeight + 3, 0);
         var _color = getColor();
-        this.entity.model.model.meshInstances[0].material = createMaterial(_color[0], _color[1], _color[2]);
+        this.entity.model.meshInstances[0].material = createMaterial(_color[0], _color[1], _color[2]);
         app.root.addChild(this.entity);
     }
 
     AimBox.prototype.reset = function () {
+        this.speed = 4;
         var _color = getColor();
         this.entity.model.model.meshInstances[0].material = createMaterial(_color[0], _color[1], _color[2]);
         this.resetPos();
@@ -141,7 +143,11 @@ function Game(callback) {
     };
     AimBox.prototype.resetPos = function (dir) {
         this.entity.enabled = true;
-        this.dir = dir;
+        var _boxsNumber = model.boxs.length;
+        if (_boxsNumber > 10) {
+            this.speed = 4 + Math.round(_boxsNumber / 10);
+        }
+        dir && (this.dir = dir);
         if (this.dir == 'right') {
             this.entity.setPosition(this.offset, model.boxs.length * p.boxHeight + 3, 0);
         } else {
@@ -179,7 +185,7 @@ function Game(callback) {
     //endregion
 
     //region 下落块
-    function Box(arg) {
+    function Box(arg, collisionCallback) {
         var entity = new pc.Entity();
         var _size = {
             x: ( 3 + p.logoHeight * 2),
@@ -197,7 +203,7 @@ function Game(callback) {
         entity.addComponent('rigidbody', {
             type       : "dynamic",
             restitution: 0,
-            mass       : 1000
+            mass       : 0.1
         });
         entity.addComponent('collision', {
             type       : "box",
@@ -211,6 +217,7 @@ function Game(callback) {
             if (p.isCollision == false) {
                 p.isCollision = true;
                 boxCollisionCallback();
+                collisionCallback && collisionCallback(entity);
             }
         });
 
@@ -219,7 +226,6 @@ function Game(callback) {
     }
 
     function boxCollisionCallback() {
-
         model.AimBox.resetPos('right');
     }
 
@@ -228,16 +234,46 @@ function Game(callback) {
             p.isCollision = false;
             if (model.AimBox.entity.enabled == true) {
                 model.AimBox.entity.enabled = false;
+                var pos = {
+                    x: model.AimBox.entity.getPosition().x,
+                    y: model.AimBox.entity.getPosition().y,
+                    z: model.AimBox.entity.getPosition().z
+                };
+                var collisionCallback = null;
+                var perfectRule = 0;
+                if (model.boxs.length < 100) {
+                    perfectRule = 0.2 * (model.boxs.length / 100);
+                }
+
+                var isPerfect = Math.abs(pos.x) < perfectRule;
+                if (isPerfect) {
+                    p.perfectNumber++;
+                    pos.x = 0;
+                    collisionCallback = function (entity) {
+                        setTimeout(function () {
+                            for (var i = 0; i < model.boxs.length; i++) {
+                                model.boxs[i].entity.rigidbody.type = 'static';
+                            }
+                        }, 100);
+
+                        audioPerfectCallback && audioPerfectCallback();
+                    };
+                } else {
+                    collisionCallback = function () {
+                        audioCollisionCallback && audioCollisionCallback();
+                    };
+                }
+
                 model.boxs.push({
                     index : model.boxs.length,
                     entity: new Box({
                         pos  : {
-                            x: model.AimBox.entity.getPosition().x,
-                            y: model.AimBox.entity.getPosition().y,
-                            z: model.AimBox.entity.getPosition().z
+                            x: pos.x,
+                            y: pos.y,
+                            z: pos.z
                         },
-                        color: getColor()
-                    })
+                        color: isPerfect ? [1.00, 0.84, 0.19] : getColor()
+                    }, collisionCallback)
                 });
                 model.AimBox.resetMaterial();
             }
@@ -255,7 +291,8 @@ function Game(callback) {
             type: "box"
         });
         ground.addComponent('rigidbody', {
-            type: "static"
+            type       : "static",
+            restitution: 0
         });
         ground.addComponent('collision', {
             type       : "box",
@@ -341,14 +378,14 @@ function Game(callback) {
             clearColor: new pc.Color(46 / 255, 42 / 255, 56 / 255)
         });
         this.entity.setPosition(-8.5, 3.5, 7);
-        this.entity.lookAt(0, 2, 0);
+        this.entity.lookAt(-0.1, 2, 0);
         app.root.addChild(this.entity);
 
     }
 
     Camera.prototype.reset = function (dt) {
-        this.entity.setPosition(-8.5, 4, 7);
-        this.entity.lookAt(0, 2.5, 0);
+        this.entity.setPosition(-8.5, 3.5, 7);
+        this.entity.lookAt(-0.1, 2, 0);
     };
     Camera.prototype.update = function (dt) {
         var camera = this.entity;
@@ -358,11 +395,11 @@ function Game(callback) {
     };
     Camera.prototype.gameOverZoom = function (dt) {
         var camera = this.entity;
-        if (camera.getPosition().z < 8) {
-            camera.setPosition(camera.getPosition().x - 3 * dt, camera.getPosition().y + 3 * dt, camera.getPosition().z + 3 * dt);
+        if (camera.getPosition().z < 10) {
+            camera.setPosition(camera.getPosition().x - 4 * dt, camera.getPosition().y + 3 * dt, camera.getPosition().z + 3 * dt);
         } else {
             if (camera.getPosition().y > 5) {
-                camera.setPosition(camera.getPosition().x, camera.getPosition().y - 0.1 * dt, camera.getPosition().z);
+                camera.setPosition(camera.getPosition().x, camera.getPosition().y - 1 * dt, camera.getPosition().z);
             }
         }
     };
@@ -383,6 +420,33 @@ function Game(callback) {
     new Light();
     //endregion
 
+    //region star
+    function Star() {
+        var entity = new pc.Entity();
+        this.entity = entity;
+        entity.addComponent('model', {
+            type: 'box',
+            tags: 'star'
+        });
+        entity.setLocalScale(0.1, 0.1, 0.001);
+        entity.setPosition(10 * Math.random(), 15 * Math.random(), -10 * Math.random());
+        entity.model.meshInstances[0].material = createMaterial(0.5, 0.5, 0.5);
+        app.root.addChild(entity);
+    }
+
+    var star = [];
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    star.push(new Star());
+    //endregion
+
     //验证游戏失败
     this.checkGameOver();
 
@@ -393,6 +457,12 @@ function Game(callback) {
         } else {
             model.camera.update(dt);
             model.AimBox.update(dt);
+
+            if (Math.random() * 10 > 5) {
+                star[0].entity.rotate(0, 1, 0);
+                star[4].entity.rotate(0, 2, 0);
+                star[8].entity.rotate(0, 3, 0);
+            }
         }
     });
 
@@ -418,7 +488,10 @@ Game.prototype.checkGameOver = function () {
                     p.isGameOver = true;
                     model.AimBox.entity.enabled = false;
 
-                    p.gameOverCallback(model.boxs.length);
+                    p.gameOverCallback({
+                        score  : model.boxs.length,
+                        perfect: p.perfectNumber
+                    });
                 }
 
             }
@@ -440,6 +513,7 @@ Game.prototype.restart = function () {
     this.model.camera.reset();
 
     //状态重置
+    this.p.perfectNumber = 0;
     this.p.isGameOver = false;
     this.p.isCollision = true;
 
@@ -448,13 +522,26 @@ Game.prototype.restart = function () {
 
 $(function () {
     //初始化游戏
-    var game = new Game(gameOverCallback);
+    var game = new Game(gameOverCallback, audioPerfect, audioCollision);
+
+    //音效perfect
+    function audioPerfect() {
+        console.log('Perfect')
+        $('#audio-wuhu')[0].play();
+    }
+
+    //音效碰撞
+    function audioCollision() {
+        console.log('碰撞')
+        $('#audio-ding')[0].play();
+    }
 
     //游戏结束callback
-    function gameOverCallback(score) {
+    function gameOverCallback(data) {
         //得分画面
         $('.score-area').show();
-        $('.score-number').html(score);
+        $('.score-number').html(data.score);
+        $('.perfect-number').html(data.perfect);
     }
 
     //重新打开
